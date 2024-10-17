@@ -16,77 +16,77 @@ import org.socratesbe.hearts.vocabulary.Card
 import org.socratesbe.hearts.vocabulary.PlayerName
 
 fun main() {
-    org.socratesbe.hearts.Application.run()
+    Application.run()
 }
 
 object Application {
-    private val context = org.socratesbe.hearts.Context()
+    private val context = Context()
     private var round = 1
 
     fun run() {
         val players = listOf("Joe", "Mary", "Bob", "Sue")
-        players.forEach { org.socratesbe.hearts.Application.joinGame(it) }
-        org.socratesbe.hearts.Application.startGame()
+        players.forEach { joinGame(it) }
+        startGame()
 
-        while (!org.socratesbe.hearts.Application.hasGameEnded()) {
-            org.socratesbe.hearts.Application.passAllCardsFor(players)
-            org.socratesbe.hearts.Application.playRoundWith(players)
+        while (!hasGameEnded()) {
+            passAllCardsFor(players)
+            playRoundWith(players)
         }
 
         println("=== Final Scores ===")
         players.forEach { player ->
-            println("$player: ${org.socratesbe.hearts.Application.scoreOf(player)}")
+            println("$player: ${scoreOf(player)}")
         }
     }
 
     private fun passAllCardsFor(players: List<String>) {
-        players.forEach { org.socratesbe.hearts.Application.passFirstThreeCards(it) }
+        players.forEach { passFirstThreeCards(it) }
     }
 
-    private fun scoreOf(player: PlayerName) = org.socratesbe.hearts.Application.execute(WhatIsScoreOfPlayer(player))
+    private fun scoreOf(player: PlayerName) = execute(WhatIsScoreOfPlayer(player))
 
     private fun playRoundWith(players: List<String>) {
-        println("=== Round ${org.socratesbe.hearts.Application.round} ===")
+        println("=== Round $round ===")
         for (turn in 0 until 13) {
             for (player in players) {
-                val currentPlayer = org.socratesbe.hearts.Application.whoseTurnIsIt()
-                val playedCard = org.socratesbe.hearts.Application.cardsInHandOf(currentPlayer)
-                    .first { org.socratesbe.hearts.Application.playCard(it, currentPlayer) == PlayedCard }
+                val currentPlayer = whoseTurnIsIt()
+                val playedCard = cardsInHandOf(currentPlayer)
+                    .first { playCard(it, currentPlayer) == PlayedCard }
                 println("$currentPlayer played $playedCard")
             }
             println("------------")
         }
-        org.socratesbe.hearts.Application.round++
+        round++
     }
 
-    private fun hasGameEnded() = org.socratesbe.hearts.Application.execute(HasGameEnded)
+    private fun hasGameEnded() = execute(HasGameEnded)
 
-    private fun playCard(card: Card, playedBy: PlayerName) = org.socratesbe.hearts.Application.execute(PlayCard(card, playedBy))
+    private fun playCard(card: Card, playedBy: PlayerName) = execute(PlayCard(card, playedBy))
 
-    private fun whoseTurnIsIt() = org.socratesbe.hearts.Application.execute(WhoseTurnIsIt)
+    private fun whoseTurnIsIt() = execute(WhoseTurnIsIt)
 
     private fun passFirstThreeCards(player: PlayerName) {
-        val hand = org.socratesbe.hearts.Application.cardsInHandOf(player)
+        val hand = cardsInHandOf(player)
         val firstThreeCards = hand.subList(0, 3).toSet()
-        val result = org.socratesbe.hearts.Application.passCards(firstThreeCards, player)
+        val result = passCards(firstThreeCards, player)
         if (result == PassedCards) {
             println("$player passed cards: ${firstThreeCards.joinToString(", ")}")
         }
     }
 
-    private fun passCards(cards: Set<Card>, passedBy: PlayerName) = org.socratesbe.hearts.Application.execute(PassCards(cards, passedBy))
+    private fun passCards(cards: Set<Card>, passedBy: PlayerName) = execute(PassCards(cards, passedBy))
 
     private fun joinGame(player: PlayerName) {
-        org.socratesbe.hearts.Application.execute(MakePlayerJoinGame(player))
+        execute(MakePlayerJoinGame(player))
     }
 
     private fun startGame() {
-        org.socratesbe.hearts.Application.execute(StartGame())
+        execute(StartGame())
     }
 
-    private fun cardsInHandOf(player: PlayerName) = org.socratesbe.hearts.Application.execute(CardsInHandOf(player))
+    private fun cardsInHandOf(player: PlayerName) = execute(CardsInHandOf(player))
 
-    private fun <Result> execute(query: Query<Result>) = org.socratesbe.hearts.Application.context.queryExecutor.execute(query)
+    private fun <Result> execute(query: Query<Result>) = context.queryExecutor.execute(query)
 
-    private fun <Result> execute(command: Command<Result>) = org.socratesbe.hearts.Application.context.commandExecutor.execute(command)
+    private fun <Result> execute(command: Command<Result>) = context.commandExecutor.execute(command)
 }

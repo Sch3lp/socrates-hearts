@@ -15,20 +15,18 @@ fun interface QueryHandler<Result, Q : Query<Result>> {
 }
 
 class HasGameStartedHandler(private val game: Game) : QueryHandler<Boolean, HasGameStarted> {
-    override fun execute(query: HasGameStarted): Boolean {
-        TODO()
-    }
+    override fun execute(query: HasGameStarted): Boolean = game.isStarted()
 }
 
 class CardsInHandOfHandler(private val game: Game) : QueryHandler<List<Card>, CardsInHandOf> {
     override fun execute(query: CardsInHandOf): List<Card> {
-        TODO()
+        return game.peekIntoHandOf(query.player)
     }
 }
 
 class WhoseTurnIsItHandler(private val game: Game) : QueryHandler<PlayerName, WhoseTurnIsIt> {
     override fun execute(query: WhoseTurnIsIt): PlayerName {
-        TODO()
+        return game.whoseTurnIsIt()
     }
 }
 

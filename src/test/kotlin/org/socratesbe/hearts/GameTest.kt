@@ -20,11 +20,6 @@ import org.socratesbe.hearts.application.api.query.HasGameEnded
 import org.socratesbe.hearts.application.api.query.HasGameStarted
 import org.socratesbe.hearts.application.api.query.WhatIsScoreOfPlayer
 import org.socratesbe.hearts.application.api.query.WhoseTurnIsIt
-import org.socratesbe.hearts.domain.AlwaysPassLeft
-import org.socratesbe.hearts.domain.FourWayPassing
-import org.socratesbe.hearts.domain.Game
-import org.socratesbe.hearts.domain.NoPassing
-import org.socratesbe.hearts.domain.PassingRule
 import org.socratesbe.hearts.vocabulary.Card
 import org.socratesbe.hearts.vocabulary.PlayerName
 import org.socratesbe.hearts.vocabulary.Suit.CLUBS
@@ -46,13 +41,12 @@ import org.socratesbe.hearts.vocabulary.of
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.socratesbe.hearts.domain.*
 
 class GameTest {
-
     private val context = Context(Game())
 
     // start here by enabling this first test
-    @Disabled
     @Test
     fun `game can start when exactly four players have joined`() {
         joinGame("Mary")
@@ -67,7 +61,6 @@ class GameTest {
     }
 
     // enable the second test after you got the first one green
-    @Disabled
     @Test
     fun `game cannot start when less than four players have joined`() {
         joinGame("Mary")
@@ -81,7 +74,6 @@ class GameTest {
     }
 
     // ... I think you know what to do from now on :)
-    @Disabled
     @Test
     fun `no more than four players can join the game`() {
         joinGame("Mary")
@@ -99,7 +91,6 @@ class GameTest {
         )
     }
 
-    @Disabled
     @Test
     fun `each player is dealt 13 unique cards on game start`() {
         joinGame("Mary")
@@ -119,7 +110,6 @@ class GameTest {
         assertThat(uniqueCards.size).isEqualTo(52)
     }
 
-    @Disabled
     @Test
     fun `player with 2 of clubs gets the first turn`() {
         onDeal(::dealFixedCards)
@@ -135,7 +125,6 @@ class GameTest {
         assertThat(whoseTurnIsIt()).isEqualTo("Bob")
     }
 
-    @Disabled
     @Test
     fun `player who is not on turn cannot play a card`() {
         onDeal(::dealFixedCards)
@@ -152,7 +141,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPlayCard("It's not Joe's turn to play"))
     }
 
-    @Disabled
     @Test
     fun `player cannot play a card they don't have in their hand`() {
         onDeal(::dealFixedCards)
@@ -169,7 +157,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPlayCard("Bob does not have K♥️ in their hand"))
     }
 
-    @Disabled
     @Test
     fun `first player cannot play card different than two of clubs on first turn`() {
         onDeal(::dealFixedCards)
@@ -573,13 +560,13 @@ class GameTest {
     }
 
     private fun onDeal(dealCardsToPlayer: (PlayerName) -> List<Card>) {
-        TODO()
+        Locator.dealer = dealCardsToPlayer
     }
 
     private fun setPassingRuleTo(rule: PassingRule) {
         // hint: for now, ignore this method by commenting out the line below
         // this method will become relevant when you encounter the first test where players have to pass cards
-        TODO()
+//        TODO()
     }
 
     private fun playCards(cardPlays: Iterator<PlayCard>) {
