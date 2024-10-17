@@ -3,6 +3,8 @@
 This repository contains tests and some code structure for a game in the [Hearts](https://en.wikipedia.org/wiki/Hearts_(card_game)) family.
 Tests are provided, it's up to you to make them green and model the game in the process.
 
+This repository is the hard work of [Enver Bral](https://gitlab.com/enverbral). Find his original repository [over here on GitLab](https://gitlab.com/enverbral/socrates-hearts).
+
 ## How to import this project
 
 ### Using Intellij IDEA
