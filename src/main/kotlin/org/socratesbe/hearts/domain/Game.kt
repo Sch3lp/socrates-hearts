@@ -117,8 +117,9 @@ data class DealtPlayer(val player: Player, val hand: ArrayDeque<Card>) {
     val name = player.name
 
     fun play(card: Card): PlayCardResponse =
-        if (hand.removeIf { it == card }) PlayedCard
-        else CouldNotPlayCard("$name does not have $card in their hand")
+        if (card !in hand) CouldNotPlayCard("$name does not have $card in their hand")
+        else if (TWO of CLUBS in hand && card != TWO of CLUBS) CouldNotPlayCard("$name must play ${TWO of CLUBS} on the first turn")
+        else PlayedCard.also { hand.remove(card) }
 }
 
 data class Player(val id: PlayerId, val name: PlayerName) {
