@@ -19,10 +19,10 @@ class Game(private var state: GameState = GameState.Open()) {
             is GameState.Started -> PlayerCouldNotJoin(player, "Game has started")
         }
 
-    fun start(): StartGameResponse =
+    fun start(dealer: (PlayerName) -> List<Card>): StartGameResponse =
         when (state) {
             is GameState.Full -> {
-                state = (state as GameState.Full).deal()
+                state = (state as GameState.Full).deal(dealer)
                 GameHasStarted
             }
 
@@ -68,7 +68,7 @@ sealed interface GameState {
     }
 
     class Full(private val players: List<Player>) : GameState {
-        fun deal(): GameState = Started.Started(players)
+        fun deal(dealer: (PlayerName) -> List<Card>): GameState = Started.Started(players, dealer)
     }
 
     class Started private constructor(private val players: List<DealtPlayer>) : GameState {
@@ -91,8 +91,8 @@ sealed interface GameState {
                 ?: error("There's no player with name $playerName in this game...")
 
         companion object {
-            fun Started(players: List<Player>): Started {
-                return Started(players.map { player -> player.deal(Locator.dealer) })
+            fun Started(players: List<Player>, dealer: (PlayerName) -> List<Card>): Started {
+                return Started(players.map { player -> player.deal(dealer) })
             }
         }
     }
@@ -128,8 +128,4 @@ data class Player(val id: PlayerId, val name: PlayerName) {
 
 enum class PlayerId {
     One, Two, Three, Four
-}
-
-object Locator {
-    var dealer = defaultDealerFn(Deck().shuffle())
 }

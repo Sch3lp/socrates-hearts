@@ -1,6 +1,9 @@
 package org.socratesbe.hearts.application.api.command
 
-class StartGame : Command<StartGameResponse>
+import org.socratesbe.hearts.vocabulary.Card
+import org.socratesbe.hearts.vocabulary.PlayerName
+
+class StartGame(val dealer: (PlayerName) -> List<Card>) : Command<StartGameResponse>
 
 sealed interface StartGameResponse
 data object GameHasStarted : StartGameResponse

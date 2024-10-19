@@ -15,7 +15,7 @@ internal class MakePlayerJoinGameHandler(private val game: Game) : CommandHandle
 
 internal class StartGameHandler(private val game: Game) : CommandHandler<StartGameResponse, StartGame> {
     override fun execute(command: StartGame): StartGameResponse {
-        return game.start()
+        return game.start(command.dealer)
     }
 }
 

@@ -12,6 +12,8 @@ import org.socratesbe.hearts.application.api.query.HasGameEnded
 import org.socratesbe.hearts.application.api.query.Query
 import org.socratesbe.hearts.application.api.query.WhatIsScoreOfPlayer
 import org.socratesbe.hearts.application.api.query.WhoseTurnIsIt
+import org.socratesbe.hearts.domain.Deck
+import org.socratesbe.hearts.domain.defaultDealerFn
 import org.socratesbe.hearts.vocabulary.Card
 import org.socratesbe.hearts.vocabulary.PlayerName
 
@@ -81,7 +83,7 @@ object Application {
     }
 
     private fun startGame() {
-        execute(StartGame())
+        execute(StartGame(defaultDealerFn(Deck().shuffle())))
     }
 
     private fun cardsInHandOf(player: PlayerName) = execute(CardsInHandOf(player))
