@@ -49,7 +49,12 @@ class Game(private var state: GameState = GameState.Open()) {
 
     fun playCard(card: Card, playedBy: PlayerName): PlayCardResponse =
         when (state) {
-            is GameState.Started -> (state as GameState.Started).playCard(card = card, playedBy = playedBy)
+            is GameState.Started -> {
+                val (response, newState) = (state as GameState.Started).playCard(card = card, playedBy = playedBy)
+                state = newState
+                response
+            }
+
             is GameState.Open -> error("Game hasn't started yet")
             is GameState.Full -> error("Game hasn't started yet")
         }
@@ -77,14 +82,19 @@ sealed interface GameState {
         }
 
         fun whoseTurnIsIt(): PlayerName {
-            return players.firstOrNull { TWO of CLUBS in it.hand }?.name
-                ?: error("Nobody has the $TWO of $CLUBS")
+            return players.first().name
         }
 
-        fun playCard(card: Card, playedBy: PlayerName): PlayCardResponse {
-            return if (whoseTurnIsIt() != playedBy) CouldNotPlayCard("It's not ${playedBy}'s turn to play")
-            else getPlayer(playedBy).play(card)
+        fun playCard(card: Card, playedBy: PlayerName): Pair<PlayCardResponse, Started> {
+            return if (whoseTurnIsIt() != playedBy) CouldNotPlayCard("It's not ${playedBy}'s turn to play") to this
+            else getPlayer(playedBy).play(card) to nextPlayer()
         }
+
+        private fun nextPlayer(): Started {
+            return Started(players.cycleClockwise())
+        }
+
+        private fun List<DealtPlayer>.cycleClockwise() = (1..5).map { this[it % 4] }
 
         private fun getPlayer(playerName: PlayerName): DealtPlayer =
             players.firstOrNull { it.name == playerName }
@@ -92,7 +102,10 @@ sealed interface GameState {
 
         companion object {
             fun Started(players: List<Player>, dealer: (PlayerName) -> List<Card>): Started {
-                return Started(players.map { player -> player.deal(dealer) })
+                val dealtPlayers = players.map { player -> player.deal(dealer) }
+                val firstPlayerId = dealtPlayers.indexOfFirst { TWO of CLUBS in it.hand }
+                if (firstPlayerId == -1) error("Nobody has the $TWO of $CLUBS")
+                return Started((firstPlayerId..firstPlayerId + 3).map { dealtPlayers[it % 4] })
             }
         }
     }

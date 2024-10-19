@@ -169,7 +169,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPlayCard("Bob must play 2♣️ on the first turn"))
     }
 
-    @Disabled
     @Test
     fun `player that is not to the left of the previous player cannot play next`() {
         setPassingRuleTo(NoPassing)
