@@ -47,18 +47,18 @@ class Game(private var state: GameState = GameState.Open()) {
             is GameState.Full -> error("Game hasn't started yet")
         }
 
-    fun playCard(card: Card, playedBy: PlayerName): PlayCardResponse =
+    fun playCard(card: Card, playedBy: PlayerName) =
         when (state) {
             is GameState.Started -> {
-                val (response, newState) = (state as GameState.Started).playCard(card = card, playedBy = playedBy)
-                state = newState
-                response
+                state = (state as GameState.Started).playCard(card = card, playedBy = playedBy)
             }
 
             is GameState.Open -> error("Game hasn't started yet")
             is GameState.Full -> error("Game hasn't started yet")
         }
 }
+
+class GameException(override val message: String) : RuntimeException(message)
 
 sealed interface GameState {
     class Open(private val players: List<Player> = emptyList()) : GameState {
@@ -85,9 +85,10 @@ sealed interface GameState {
             return players.first().name
         }
 
-        fun playCard(card: Card, playedBy: PlayerName): Pair<PlayCardResponse, Started> {
-            return if (whoseTurnIsIt() != playedBy) CouldNotPlayCard("It's not ${playedBy}'s turn to play") to this
-            else getPlayer(playedBy).play(card) to nextPlayer()
+        fun playCard(card: Card, playedBy: PlayerName): Started {
+            gameRequires(whoseTurnIsIt() == playedBy) { "It's not ${playedBy}'s turn to play" }
+            getPlayer(playedBy).play(card)
+            return nextPlayer()
         }
 
         private fun nextPlayer(): Started {
@@ -129,10 +130,15 @@ data class DealtPlayer(val player: Player, val hand: ArrayDeque<Card>) {
 
     val name = player.name
 
-    fun play(card: Card): PlayCardResponse =
-        if (card !in hand) CouldNotPlayCard("$name does not have $card in their hand")
-        else if (TWO of CLUBS in hand && card != TWO of CLUBS) CouldNotPlayCard("$name must play ${TWO of CLUBS} on the first turn")
-        else PlayedCard.also { hand.remove(card) }
+    fun play(card: Card) {
+        gameRequires(card in hand) { "$name does not have $card in their hand" }
+        gameRequires(TWO of CLUBS in hand && card == TWO of CLUBS) { "$name must play ${TWO of CLUBS} on the first turn" }
+        hand.remove(card)
+    }
+}
+
+fun gameRequires(predicate: Boolean, message: () -> String) {
+    if (!predicate) throw GameException(message())
 }
 
 data class Player(val id: PlayerId, val name: PlayerName) {
