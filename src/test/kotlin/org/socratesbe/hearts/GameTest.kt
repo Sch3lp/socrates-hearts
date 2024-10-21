@@ -206,7 +206,6 @@ class GameTest {
         assertThat(result).isEqualTo(PlayedCard)
     }
 
-    @Disabled
     @Test
     fun `player has to follow suit if they can`() {
         setPassingRuleTo(NoPassing)

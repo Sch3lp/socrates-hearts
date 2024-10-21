@@ -80,7 +80,7 @@ sealed interface GameState {
 
     class Started private constructor(
         private val players: DealtPlayers,
-        private val currentTrick: Map<Card, PlayerId>
+        private val currentTrick: Trick,
     ) : GameState {
         private val currentPlayer = players.currentPlayer
 
@@ -99,33 +99,38 @@ sealed interface GameState {
         private fun addToTrick(card: Card, playerId: PlayerId) =
             Started(
                 players = players,
-                currentTrick = currentTrick.apply { toMutableMap()[card] = playerId }.toMap()
+                currentTrick = currentTrick.add(card, playerId)
             )
 
         private fun nextPlayer(): Started {
             val winner = currentTrick.winner
             val (nextPlayer, trick) =
-                if (winner != null) players.startWith(winner.id) to mutableMapOf()
+                if (winner != null) players.startWith(winner) to Trick()
                 else players.next() to currentTrick
             return Started(nextPlayer, trick)
         }
-
-        private fun Map<Card, PlayerId>.isFinished() = size == 4
-
-        private val Map<Card, PlayerId>.winner: DealtPlayer?
-            get() =
-                if (!isFinished()) null
-                else getValue(keys.maxWith(HeartsComparator)).let { winnerId -> players.getById(winnerId) }
 
         private fun getPlayer(playerName: PlayerName): DealtPlayer = players.getByName(playerName)
 
         companion object {
             fun Started(players: List<Player>, dealer: (PlayerName) -> List<Card>): Started {
                 val dealtPlayers = players.map { player -> player.deal(dealer) }
-                return Started(DealtPlayers(dealtPlayers), mutableMapOf())
+                return Started(DealtPlayers(dealtPlayers), Trick())
             }
         }
     }
+}
+
+class Trick(private val cards: Map<Card, PlayerId> = emptyMap()) {
+    val winner: PlayerId?
+        get() =
+            if (!isFinished()) null
+            else cards.getValue(cards.keys.maxWith(HeartsComparator))
+
+    fun add(card: Card, playerId: PlayerId) =
+        Trick(cards + listOf(card to playerId))
+
+    private fun isFinished() = cards.size == 4
 }
 
 class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
