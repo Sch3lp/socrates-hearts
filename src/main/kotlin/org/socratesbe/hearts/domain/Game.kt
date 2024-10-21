@@ -3,7 +3,9 @@ package org.socratesbe.hearts.domain
 import org.socratesbe.hearts.application.api.command.*
 import org.socratesbe.hearts.vocabulary.*
 import org.socratesbe.hearts.vocabulary.Suit.CLUBS
+import org.socratesbe.hearts.vocabulary.Suit.HEARTS
 import org.socratesbe.hearts.vocabulary.Symbol.TWO
+import java.util.Comparator
 
 class Game(private var state: GameState = GameState.Open()) {
 
@@ -76,40 +78,92 @@ sealed interface GameState {
         fun deal(dealer: (PlayerName) -> List<Card>): GameState = Started.Started(players, dealer)
     }
 
-    class Started private constructor(private val players: List<DealtPlayer>) : GameState {
-        fun peekIntoHandOf(playerName: PlayerName): List<Card> {
-            return getPlayer(playerName).hand
-        }
+    class Started private constructor(
+        private val players: DealtPlayers,
+        private val currentTrick: Map<Card, PlayerId>
+    ) : GameState {
+        private val currentPlayer = players.currentPlayer
 
-        fun whoseTurnIsIt(): PlayerName {
-            return players.first().name
-        }
+        fun whoseTurnIsIt(): PlayerName = currentPlayer.name
+
+        fun peekIntoHandOf(playerName: PlayerName): List<Card> =
+            getPlayer(playerName).hand
 
         fun playCard(card: Card, playedBy: PlayerName): Started {
-            gameRequires(whoseTurnIsIt() == playedBy) { "It's not ${playedBy}'s turn to play" }
-            getPlayer(playedBy).play(card)
-            return nextPlayer()
+            val player = getPlayer(playedBy)
+            gameRequires(currentPlayer == player) { "It's not ${playedBy}'s turn to play" }
+            player.play(card)
+            return addToTrick(card, player.id).nextPlayer()
         }
+
+        private fun addToTrick(card: Card, playerId: PlayerId) =
+            Started(
+                players = players,
+                currentTrick = currentTrick.apply { toMutableMap()[card] = playerId }.toMap()
+            )
 
         private fun nextPlayer(): Started {
-            return Started(players.cycleClockwise())
+            val winner = currentTrick.winner
+            val (nextPlayer, trick) =
+                if (winner != null) players.startWith(winner.id) to mutableMapOf()
+                else players.next() to currentTrick
+            return Started(nextPlayer, trick)
         }
 
-        private fun List<DealtPlayer>.cycleClockwise() = (1..5).map { this[it % 4] }
+        private fun Map<Card, PlayerId>.isFinished() = size == 4
 
-        private fun getPlayer(playerName: PlayerName): DealtPlayer =
-            players.firstOrNull { it.name == playerName }
-                ?: error("There's no player with name $playerName in this game...")
+        private val Map<Card, PlayerId>.winner: DealtPlayer?
+            get() =
+                if (!isFinished()) null
+                else getValue(keys.maxWith(HeartsComparator)).let { winnerId -> players.getById(winnerId) }
+
+        private fun getPlayer(playerName: PlayerName): DealtPlayer = players.getByName(playerName)
 
         companion object {
             fun Started(players: List<Player>, dealer: (PlayerName) -> List<Card>): Started {
                 val dealtPlayers = players.map { player -> player.deal(dealer) }
-                val firstPlayerId = dealtPlayers.indexOfFirst { TWO of CLUBS in it.hand }
-                if (firstPlayerId == -1) error("Nobody has the $TWO of $CLUBS")
-                return Started((firstPlayerId..firstPlayerId + 3).map { dealtPlayers[it % 4] })
+                return Started(DealtPlayers(dealtPlayers), mutableMapOf())
             }
         }
     }
+}
+
+class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
+    val currentPlayer get() = players.first()
+
+    fun next() = DealtPlayers((1..5).map { players[it % 4] })
+
+    fun startWith(playerId: PlayerId) =
+        DealtPlayers(
+            players.indexOfFirst { it.id == playerId }
+                .let { indexToCycleFrom ->
+                    (indexToCycleFrom..indexToCycleFrom + 3).map { players[it % 4] }
+                }
+        )
+
+    fun getByName(playerName: PlayerName): DealtPlayer =
+        players.firstOrNull { it.name == playerName }
+            ?: error("There's no player with name $playerName in this game...")
+
+    fun getById(playerId: PlayerId): DealtPlayer =
+        players.firstOrNull { it.id == playerId }
+            ?: error("There's no player with id $playerId in this game...")
+
+    companion object {
+        operator fun invoke(players: List<DealtPlayer>) =
+            DealtPlayers(players)
+                .startWith(players.firstOrNull { TWO of CLUBS in it.hand }?.id ?: players.first().id)
+    }
+}
+
+object HeartsComparator : Comparator<Card> {
+    override fun compare(left: Card, right: Card): Int =
+        when {
+            left.suit == right.suit -> left.symbol.compareTo(right.symbol)
+            left.suit == HEARTS -> 1
+            right.suit == HEARTS -> -1
+            else -> 1 //means right is of a different suit than the first card in the trick
+        }
 }
 
 class Deck private constructor(private val cards: ArrayDeque<Card>) {
@@ -128,11 +182,12 @@ fun defaultDealerFn(deck: Deck): (PlayerName) -> List<Card> = { _ ->
 
 data class DealtPlayer(val player: Player, val hand: ArrayDeque<Card>) {
 
+    val id = player.id
     val name = player.name
 
     fun play(card: Card) {
         gameRequires(card in hand) { "$name does not have $card in their hand" }
-        gameRequires(TWO of CLUBS in hand && card == TWO of CLUBS) { "$name must play ${TWO of CLUBS} on the first turn" }
+        if (TWO of CLUBS in hand) gameRequires(card == TWO of CLUBS) { "$name must play ${TWO of CLUBS} on the first turn" }
         hand.remove(card)
     }
 }

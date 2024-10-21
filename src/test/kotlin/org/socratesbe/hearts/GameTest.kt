@@ -185,7 +185,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPlayCard("It's not Mary's turn to play"))
     }
 
-    @Disabled
     @Test
     fun `the player that won the last trick starts the next trick`() {
         setPassingRuleTo(NoPassing)
