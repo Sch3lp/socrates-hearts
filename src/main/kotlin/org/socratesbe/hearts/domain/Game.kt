@@ -150,10 +150,6 @@ class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
         players.firstOrNull { it.name == playerName }
             ?: error("There's no player with name $playerName in this game...")
 
-    fun getById(playerId: PlayerId): DealtPlayer =
-        players.firstOrNull { it.id == playerId }
-            ?: error("There's no player with id $playerId in this game...")
-
     companion object {
         operator fun invoke(players: List<DealtPlayer>) =
             DealtPlayers(players)
