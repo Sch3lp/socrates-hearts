@@ -15,7 +15,7 @@ fun interface QueryHandler<Result, Q : Query<Result>> {
 }
 
 class HasGameStartedHandler(private val game: Game) : QueryHandler<Boolean, HasGameStarted> {
-    override fun execute(query: HasGameStarted): Boolean = game.isStarted()
+    override fun execute(query: HasGameStarted): Boolean = game.isStarted
 }
 
 class CardsInHandOfHandler(private val game: Game) : QueryHandler<List<Card>, CardsInHandOf> {
