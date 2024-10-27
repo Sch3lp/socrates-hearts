@@ -31,8 +31,9 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         gameEvents.filterIsInstance<CardPlayed>().last().by
 
     private val currentTrick: Trick? get() =
-        gameEvents.filterIsInstance<CardPlayed>().chunked(4).lastOrNull()
-            ?.let { Trick(it.associate { event -> event.card to event.by }) }
+        gameEvents.filterIsInstance<CardPlayed>().chunked(4)
+            .mapIndexed { idx, cards -> Trick(idx + 1, cards.associate { event -> event.card to event.by }) }
+            .lastOrNull()
 
     private val lastTrickWonBy get() : PlayerName? =
         currentTrick?.wasWonBy?.let { id -> dealtPlayers.getById(id) }?.name

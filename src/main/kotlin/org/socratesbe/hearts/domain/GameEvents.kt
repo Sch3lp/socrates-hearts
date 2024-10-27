@@ -18,6 +18,7 @@ data class Hand(private val cards: ArrayDeque<Card>) {
 
     fun remove(card: Card) = cards.remove(card)
     fun toList(): List<Card> = cards.toList()
+    fun allAre(suit: Suit) = cards.all { card -> card.suit == suit }
 }
 
 fun interface GameEventListener<GameEvent> {

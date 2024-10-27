@@ -21,20 +21,33 @@ data class DealtPlayer(val player: Player, val hand: Hand) {
     fun play(card: Card, currentTrick: Trick?): Pair<PlayerId, Card> {
         gameRequires(card in hand) { "$name does not have $card in their hand" }
         gameRequires(twoOfClubsIsPlayedOnFirstTurn(card)) { "$name must play ${Symbol.TWO of Suit.CLUBS} on the first turn" }
-        gameRequires(playerToPlayNoHeartsIfTheyAreAble(currentTrick, card)) { "$name cannot play ${card.suit} on the first trick" }
-        gameRequires(playerToFollowSuit(currentTrick, card)) { "$name must follow suit" }
+        currentTrick?.checkCardIsPlayable(card)
         hand.remove(card)
         return id to card
+    }
+
+    private fun Trick.checkCardIsPlayable(card: Card) {
+        if (card.suit == Suit.HEARTS) {
+            gameRequires(playerToPlayNoHeartsIfTheyAreAble(this)) { "$name cannot play ${Suit.HEARTS} on the first trick" }
+        } else {
+            gameRequires(playerToFollowSuit(this, card)) { "$name must follow suit" }
+        }
     }
 
     private fun twoOfClubsIsPlayedOnFirstTurn(card: Card) =
         Symbol.TWO of Suit.CLUBS !in hand || card == Symbol.TWO of Suit.CLUBS
 
-    private fun playerToPlayNoHeartsIfTheyAreAble(currentTrick: Trick?, card: Card) =
-        currentTrick?.suit == null || card.suit != Suit.HEARTS
+    private fun playerToPlayNoHeartsIfTheyAreAble(currentTrick: Trick): Boolean {
+        return when {
+            currentTrick.isFirstTrick && currentTrick.suit == null -> hand.allAre(Suit.HEARTS)
+            currentTrick.isFirstTrick && currentTrick.suit != null -> hand.allAre(Suit.HEARTS)
+            currentTrick.suit != null -> currentTrick.suit !in hand
+            else -> false
+        }
+    }
 
-    private fun playerToFollowSuit(currentTrick: Trick?, card: Card) =
-        currentTrick?.suit == null || card.suit == currentTrick.suit
+    private fun playerToFollowSuit(currentTrick: Trick, card: Card) =
+        currentTrick.suit == null || card.suit == currentTrick.suit || card.suit == Suit.HEARTS
 }
 
 data class Player(val id: PlayerId, val name: PlayerName)
