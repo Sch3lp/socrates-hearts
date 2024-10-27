@@ -72,7 +72,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         gameRequires(isStarted) { "Game has not started yet" }
         gameRequires(playedBy == whoseTurnIsIt()) { "It's not ${playedBy}'s turn to play" }
         val player = getPlayer(playedBy)
-        val (playerId, playedCard) = player.play(card)
+        val (playerId, playedCard) = player.play(card, currentTrick)
         gameEvents.publish(CardPlayed(by = playerId, card = playedCard))
     }
 }
