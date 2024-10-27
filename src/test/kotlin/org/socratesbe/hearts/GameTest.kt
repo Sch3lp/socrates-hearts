@@ -222,7 +222,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPlayCard("Jane must follow suit"))
     }
 
-    @Disabled
     @Test
     fun `player cannot play hearts in first round when player has other options`() {
         setPassingRuleTo(NoPassing)
