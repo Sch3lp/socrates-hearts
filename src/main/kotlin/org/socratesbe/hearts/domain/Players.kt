@@ -18,17 +18,17 @@ data class DealtPlayer(val player: Player, val hand: Hand) {
     val id = player.id
     val name = player.name
 
-    fun play(card: Card, currentTrick: Trick?): Pair<PlayerId, Card> {
+    fun play(card: Card, currentTrick: Trick?, heartsHaveBeenPlayed: Boolean): Pair<PlayerId, Card> {
         gameRequires(card in hand) { "$name does not have $card in their hand" }
         gameRequires(twoOfClubsIsPlayedOnFirstTurn(card)) { "$name must play ${Symbol.TWO of Suit.CLUBS} on the first turn" }
-        currentTrick?.checkCardIsPlayable(card)
+        currentTrick?.checkCardIsPlayable(card, heartsHaveBeenPlayed)
         hand.remove(card)
         return id to card
     }
 
-    private fun Trick.checkCardIsPlayable(card: Card) {
+    private fun Trick.checkCardIsPlayable(card: Card, heartsHaveBeenPlayed: Boolean) {
         if (card.suit == Suit.HEARTS) {
-            playerToPlayNoHeartsIfTheyAreAble(this)
+            playerToPlayNoHeartsIfTheyAreAble(this, heartsHaveBeenPlayed)
         } else {
             gameRequires(playerToFollowSuit(this, card)) { "$name must follow suit" }
         }
@@ -37,12 +37,12 @@ data class DealtPlayer(val player: Player, val hand: Hand) {
     private fun twoOfClubsIsPlayedOnFirstTurn(card: Card) =
         Symbol.TWO of Suit.CLUBS !in hand || card == Symbol.TWO of Suit.CLUBS
 
-    private fun playerToPlayNoHeartsIfTheyAreAble(currentTrick: Trick) {
+    private fun playerToPlayNoHeartsIfTheyAreAble(currentTrick: Trick, heartsHaveBeenPlayed: Boolean) {
         when {
             currentTrick.isFirstTrick && currentTrick.suit == null -> gameRequires(hand.allAre(Suit.HEARTS)) { "$name cannot open with ${Suit.HEARTS} until first ${Suit.HEARTS} has been played" }
             currentTrick.isFirstTrick && currentTrick.suit != null -> gameRequires(hand.allAre(Suit.HEARTS)) { "$name cannot play ${Suit.HEARTS} on the first trick" }
-            currentTrick.suit != null -> gameRequires(currentTrick.suit !in hand) { "$name cannot play ${Suit.HEARTS} on the first trick" }
-            else -> Unit
+            currentTrick.suit == null -> gameRequires(heartsHaveBeenPlayed) { "$name cannot play ${Suit.HEARTS} on the first trick" }
+            else -> gameRequires(currentTrick.suit !in hand) { "$name cannot play ${Suit.HEARTS} on the first trick" }
         }
     }
 

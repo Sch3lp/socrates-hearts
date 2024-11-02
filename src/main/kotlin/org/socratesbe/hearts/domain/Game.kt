@@ -7,6 +7,10 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         gameEvents.publish(GameCreated)
     }
 
+    val isStarted: Boolean get() = gameEvents.filterIsInstance<GameStarted>().isNotEmpty()
+
+    private val heartsHaveBeenPlayed: Boolean get() = gameEvents.filterIsInstance<CardPlayed>().firstOrNull { it.card.suit == Suit.HEARTS } != null
+
     private val players: List<Player>
         get() =
             gameEvents.filterIsInstance<PlayerJoined>()
@@ -37,8 +41,6 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
 
     private val lastTrickWonBy get() : PlayerName? =
         currentTrick?.wasWonBy?.let { id -> dealtPlayers.getById(id) }?.name
-
-    val isStarted: Boolean get() = gameEvents.filterIsInstance<GameStarted>().isNotEmpty()
 
     private fun getPlayer(playerName: PlayerName) = dealtPlayers.getByName(playerName)
 
@@ -73,7 +75,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         gameRequires(isStarted) { "Game has not started yet" }
         gameRequires(playedBy == whoseTurnIsIt()) { "It's not ${playedBy}'s turn to play" }
         val player = getPlayer(playedBy)
-        val (playerId, playedCard) = player.play(card, currentTrick)
+        val (playerId, playedCard) = player.play(card, currentTrick, heartsHaveBeenPlayed)
         gameEvents.publish(CardPlayed(by = playerId, card = playedCard))
     }
 }

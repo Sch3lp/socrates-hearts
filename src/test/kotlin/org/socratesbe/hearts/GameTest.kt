@@ -298,7 +298,6 @@ class GameTest {
         assertThat(result).isEqualTo(PlayedCard)
     }
 
-    @Disabled
     @Test
     fun `player can open with hearts when hearts have been played`() {
         setPassingRuleTo(NoPassing)
