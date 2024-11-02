@@ -28,7 +28,7 @@ data class DealtPlayer(val player: Player, val hand: Hand) {
 
     private fun Trick.checkCardIsPlayable(card: Card) {
         if (card.suit == Suit.HEARTS) {
-            gameRequires(playerToPlayNoHeartsIfTheyAreAble(this)) { "$name cannot play ${Suit.HEARTS} on the first trick" }
+            playerToPlayNoHeartsIfTheyAreAble(this)
         } else {
             gameRequires(playerToFollowSuit(this, card)) { "$name must follow suit" }
         }
@@ -37,12 +37,12 @@ data class DealtPlayer(val player: Player, val hand: Hand) {
     private fun twoOfClubsIsPlayedOnFirstTurn(card: Card) =
         Symbol.TWO of Suit.CLUBS !in hand || card == Symbol.TWO of Suit.CLUBS
 
-    private fun playerToPlayNoHeartsIfTheyAreAble(currentTrick: Trick): Boolean {
-        return when {
-            currentTrick.isFirstTrick && currentTrick.suit == null -> hand.allAre(Suit.HEARTS)
-            currentTrick.isFirstTrick && currentTrick.suit != null -> hand.allAre(Suit.HEARTS)
-            currentTrick.suit != null -> currentTrick.suit !in hand
-            else -> false
+    private fun playerToPlayNoHeartsIfTheyAreAble(currentTrick: Trick) {
+        when {
+            currentTrick.isFirstTrick && currentTrick.suit == null -> gameRequires(hand.allAre(Suit.HEARTS)) { "$name cannot open with ${Suit.HEARTS} until first ${Suit.HEARTS} has been played" }
+            currentTrick.isFirstTrick && currentTrick.suit != null -> gameRequires(hand.allAre(Suit.HEARTS)) { "$name cannot play ${Suit.HEARTS} on the first trick" }
+            currentTrick.suit != null -> gameRequires(currentTrick.suit !in hand) { "$name cannot play ${Suit.HEARTS} on the first trick" }
+            else -> Unit
         }
     }
 

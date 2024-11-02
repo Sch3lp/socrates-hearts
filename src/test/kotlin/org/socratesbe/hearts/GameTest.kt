@@ -256,7 +256,6 @@ class GameTest {
         assertThat(result).isEqualTo(PlayedCard)
     }
 
-    @Disabled
     @Test
     fun `player cannot open with hearts when hearts haven't been played and player has other options`() {
         setPassingRuleTo(NoPassing)
@@ -278,7 +277,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPlayCard("Mary cannot open with ♥️ until first ♥️ has been played"))
     }
 
-    @Disabled
     @Test
     fun `player can open with hearts when hearts haven't been played and player has no other options`() {
         setPassingRuleTo(NoPassing)
