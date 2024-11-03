@@ -4,6 +4,8 @@ import org.socratesbe.hearts.vocabulary.*
 
 class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
 
+    val size: Int get() = players.size
+
     fun getByName(playerName: PlayerName): DealtPlayer =
         players.firstOrNull { it.name == playerName }
             ?: error("There's no player with name $playerName in this game...")
@@ -13,12 +15,17 @@ class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
     fun playerWithStartCard() =
         players.firstOrNull { Symbol.TWO of Suit.CLUBS in it.hand }
 
+    fun forEach(block: (DealtPlayer) -> Unit) {
+        players.forEach(block)
+    }
+
     companion object {
         fun from(gameEvents: GameEvents): DealtPlayers {
-            val players: List<Player> = gameEvents.filterIsInstance<PlayerJoined>().mapIndexed { idx, it -> Player(PlayerId.entries[idx], it.playerName) }
-            val dealtPlayers = players.map { player ->
-                val currentHand = currentHand(gameEvents, player.id)
-                DealtPlayer(player, currentHand)
+            val dealtPlayers = gameEvents.filterIsInstance<PlayerJoined>().mapIndexed { idx, playerJoined ->
+                val playerId = PlayerId.entries[idx]
+                val playerName = playerJoined.playerName
+                val currentHand = currentHand(gameEvents, playerId)
+                DealtPlayer(playerId, playerName, currentHand)
             }
             return DealtPlayers(dealtPlayers)
         }
@@ -37,9 +44,7 @@ class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
     }
 }
 
-data class DealtPlayer(val player: Player, val hand: Hand) {
-    val id = player.id
-    val name = player.name
+data class DealtPlayer(val id: PlayerId, val name: PlayerName, val hand: Hand) {
 
     fun play(card: Card, currentTrick: Trick?, heartsHaveBeenPlayed: Boolean): Pair<PlayerId, Card> {
         gameRequires(card in hand) { "$name does not have $card in their hand" }
@@ -73,7 +78,6 @@ data class DealtPlayer(val player: Player, val hand: Hand) {
         currentTrick.suit == null || card.suit == currentTrick.suit || card.suit == Suit.HEARTS
 }
 
-data class Player(val id: PlayerId, val name: PlayerName)
 enum class PlayerId {
     One, Two, Three, Four;
 

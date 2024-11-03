@@ -13,12 +13,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
 
     private val heartsHaveBeenPlayed: Boolean get() = gameEvents.filterIsInstance<CardPlayed>().firstOrNull { it.card.suit == Suit.HEARTS } != null
 
-    private val players: List<Player>
-        get() =
-            gameEvents.filterIsInstance<PlayerJoined>()
-                .mapIndexed { idx, it -> Player(PlayerId.entries[idx], it.playerName) }
-
-    private val dealtPlayers: DealtPlayers get() = DealtPlayers.from(gameEvents)
+    private val players: DealtPlayers get() = DealtPlayers.from(gameEvents)
 
     private val playerThatLastPlayedACard: PlayerId get() =
         gameEvents.filterIsInstance<CardPlayed>().last().by
@@ -29,11 +24,11 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
             .lastOrNull()
 
     private val lastTrickWonBy: PlayerName? get() =
-        currentTrick?.wasWonBy?.let { id -> dealtPlayers.getById(id) }?.name
+        currentTrick?.wasWonBy?.let { id -> players.getById(id) }?.name
 
     private val passingRule: PassingRule get() = gameEvents.filterIsInstance<GameStarted>().firstOrNull()?.passingRule ?: gameError("Trying to access passing rule when game hasn't started yet is impossible")
 
-    private fun getPlayer(playerName: PlayerName) = dealtPlayers.getByName(playerName)
+    private fun getPlayer(playerName: PlayerName) = players.getByName(playerName)
 
     fun join(player: PlayerName) {
         gameRequires(players.size < 4) { "Game already has four players" }
@@ -48,7 +43,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         players.forEach { player ->
             gameEvents.publish(PlayerWasDealtHand(player.id, dealer(player.name)))
         }
-        if (passingRule == NoPassing) players.forEach{ passCards(it.name, emptySet())}
+        if (passingRule == NoPassing) players.forEach { passCards(it, emptySet())}
     }
 
     fun peekIntoHandOf(player: PlayerName): List<Card> {
@@ -58,9 +53,9 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
 
     fun whoseTurnIsIt(): PlayerName {
         gameRequires(isStarted) { "Game has not started yet" }
-        return dealtPlayers.playerWithStartCard()?.name
+        return players.playerWithStartCard()?.name
             ?: lastTrickWonBy
-            ?: dealtPlayers.getById(playerThatLastPlayedACard.playerToTheLeft).name
+            ?: players.getById(playerThatLastPlayedACard.playerToTheLeft).name
     }
 
     fun playCard(card: Card, playedBy: PlayerName) {
@@ -74,6 +69,10 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
 
     fun passCards(passedBy: PlayerName, cards: Set<Card>) {
         passingRule.with(gameEvents).passCards(getPlayer(passedBy), cards)
+    }
+
+    fun passCards(player: DealtPlayer, cards: Set<Card>) {
+        passingRule.with(gameEvents).passCards(player, cards)
     }
 }
 
