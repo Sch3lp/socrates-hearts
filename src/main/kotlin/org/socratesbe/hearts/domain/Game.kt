@@ -8,6 +8,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
     }
 
     val isStarted: Boolean get() = gameEvents.filterIsInstance<GameStarted>().isNotEmpty()
+    private val passingIsDone: Boolean get() = gameEvents.filterIsInstance<PlayersPassedCards>().isNotEmpty()
 
     private val heartsHaveBeenPlayed: Boolean get() = gameEvents.filterIsInstance<CardPlayed>().firstOrNull { it.card.suit == Suit.HEARTS } != null
 
@@ -50,10 +51,11 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         gameEvents.publish(PlayerJoined(player))
     }
 
-    fun start(dealer: (PlayerName) -> List<Card>) {
+    fun start(dealer: (PlayerName) -> List<Card>, passingRule: PassingRule) {
         gameRequires(players.size == 4) { "Not enough players joined" }
         gameRequires(!isStarted) { "Game was started already" }
-        gameEvents.publish(GameStarted)
+        gameEvents.publish(GameStarted(passingRule))
+        if (passingRule == NoPassing) gameEvents.publish(PlayersPassedCards)
         players.forEach { player ->
             gameEvents.publish(PlayerWasDealtHand(player.id, dealer(player.name)))
         }
@@ -73,6 +75,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
 
     fun playCard(card: Card, playedBy: PlayerName) {
         gameRequires(isStarted) { "Game has not started yet" }
+        gameRequires(passingIsDone) { "It's not time to play cards yet" }
         gameRequires(playedBy == whoseTurnIsIt()) { "It's not ${playedBy}'s turn to play" }
         val player = getPlayer(playedBy)
         val (playerId, playedCard) = player.play(card, currentTrick, heartsHaveBeenPlayed)

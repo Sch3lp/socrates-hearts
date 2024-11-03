@@ -7,12 +7,14 @@ import kotlin.reflect.KClass
 
 sealed interface GameEvent
 data object GameCreated : GameEvent
-data object GameStarted : GameEvent
+data class GameStarted(val passingRule: PassingRule) : GameEvent
 data class PlayerJoined(val playerName: PlayerName) : GameEvent
 data class PlayerWasDealtHand(val playerId: PlayerId, val hand: List<Card>) : GameEvent
 data class CardPlayed(val by: PlayerId, val card: Card) : GameEvent
-data class Hand(private val cards: ArrayDeque<Card>) {
+data object PlayersPassedCards : GameEvent
 
+
+data class Hand(private val cards: ArrayDeque<Card>) {
     operator fun contains(card: Card) = card in cards
     operator fun contains(suit: Suit) = suit in cards.map { it.suit }
 

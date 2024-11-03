@@ -112,7 +112,6 @@ class GameTest {
 
     @Test
     fun `player with 2 of clubs gets the first turn`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -126,7 +125,6 @@ class GameTest {
 
     @Test
     fun `player who is not on turn cannot play a card`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -141,7 +139,6 @@ class GameTest {
 
     @Test
     fun `player cannot play a card they don't have in their hand`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -156,7 +153,6 @@ class GameTest {
 
     @Test
     fun `first player cannot play card different than two of clubs on first turn`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -171,7 +167,6 @@ class GameTest {
 
     @Test
     fun `player that is not to the left of the previous player cannot play next`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -187,7 +182,6 @@ class GameTest {
 
     @Test
     fun `the player that won the last trick starts the next trick`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -208,7 +202,6 @@ class GameTest {
 
     @Test
     fun `player has to follow suit if they can`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -224,7 +217,6 @@ class GameTest {
 
     @Test
     fun `player cannot play hearts in first round when player has other options`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -241,7 +233,6 @@ class GameTest {
 
     @Test
     fun `player can play hearts in first round when player has no other options`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -258,7 +249,6 @@ class GameTest {
 
     @Test
     fun `player cannot open with hearts when hearts haven't been played and player has other options`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -279,7 +269,6 @@ class GameTest {
 
     @Test
     fun `player can open with hearts when hearts haven't been played and player has no other options`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -300,7 +289,6 @@ class GameTest {
 
     @Test
     fun `player can open with hearts when hearts have been played`() {
-        setPassingRuleTo(NoPassing)
 
         joinGame("Mary")
         joinGame("Joe")
@@ -325,16 +313,13 @@ class GameTest {
         assertThat(result).isEqualTo(PlayedCard)
     }
 
-    @Disabled
     @Test
     fun `player cannot play a card before passing has finished`() {
-        setPassingRuleTo(AlwaysPassLeft)
-
         joinGame("Mary")
         joinGame("Joe")
         joinGame("Bob")
         joinGame("Jane")
-        startGame(DealMother::dealFixedCards)
+        startGame(DealMother::dealFixedCards, AlwaysPassLeft)
 
         val result = playCard("Bob", TWO of CLUBS)
 
@@ -444,7 +429,6 @@ class GameTest {
     @Disabled
     @Test
     fun `cards are dealt a second time when all cards from first deal have been played`() {
-        setPassingRuleTo(NoPassing)
         val cardPlaysInFirstDeal = readCardPlaysFromResource("/fixed_card_plays_no_passing.txt")
 
         joinGame("Mary")
@@ -487,7 +471,6 @@ class GameTest {
     @Disabled
     @Test
     fun `scores are calculated at the end of each deal`() {
-        setPassingRuleTo(NoPassing)
         val cardPlaysInFirstDeal = readCardPlaysFromResource("/fixed_card_plays_no_passing.txt").asSequence().toList()
 
         joinGame("Mary")
@@ -512,7 +495,6 @@ class GameTest {
     @Disabled
     @Test
     fun `game ends when a score of 100 or higher is reached`() {
-        setPassingRuleTo(NoPassing)
         val cardPlays = readCardPlaysFromResource("/fixed_card_plays_no_passing.txt").asSequence().toList()
 
         joinGame("Mary")
@@ -551,7 +533,7 @@ class GameTest {
 
     private fun joinGame(player: PlayerName) = context.commandExecutor.execute(MakePlayerJoinGame(player))
 
-    private fun startGame(dealer: (PlayerName) -> List<Card>): StartGameResponse = context.commandExecutor.execute(StartGame(dealer))
+    private fun startGame(dealer: (PlayerName) -> List<Card>, passingRule: PassingRule = NoPassing): StartGameResponse = context.commandExecutor.execute(StartGame(dealer,passingRule))
 
     private fun gameHasStarted(): Boolean = context.queryExecutor.execute(HasGameStarted)
 
