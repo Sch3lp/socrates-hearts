@@ -2,32 +2,32 @@ package org.socratesbe.hearts.domain
 
 import org.socratesbe.hearts.vocabulary.*
 
-class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
+class Players private constructor(private val players: List<Player>) {
 
     val size: Int get() = players.size
 
-    fun getByName(playerName: PlayerName): DealtPlayer =
+    fun getByName(playerName: PlayerName): Player =
         players.firstOrNull { it.name == playerName }
             ?: error("There's no player with name $playerName in this game...")
 
-    fun getById(playerId: PlayerId): DealtPlayer = players.first { it.id == playerId }
+    fun getById(playerId: PlayerId): Player = players.first { it.id == playerId }
 
     fun playerWithStartCard() =
         players.firstOrNull { Symbol.TWO of Suit.CLUBS in it.hand }
 
-    fun forEach(block: (DealtPlayer) -> Unit) {
+    fun forEach(block: (Player) -> Unit) {
         players.forEach(block)
     }
 
     companion object {
-        fun from(gameEvents: GameEvents): DealtPlayers {
-            val dealtPlayers = gameEvents.filterIsInstance<PlayerJoined>().mapIndexed { idx, playerJoined ->
+        fun from(gameEvents: GameEvents): Players {
+            val players = gameEvents.filterIsInstance<PlayerJoined>().mapIndexed { idx, playerJoined ->
                 val playerId = PlayerId.entries[idx]
                 val playerName = playerJoined.playerName
                 val currentHand = currentHand(gameEvents, playerId)
-                DealtPlayer(playerId, playerName, currentHand)
+                Player(playerId, playerName, currentHand)
             }
-            return DealtPlayers(dealtPlayers)
+            return Players(players)
         }
 
         private fun currentHand(gameEvents: GameEvents, playerId: PlayerId): Hand {
@@ -44,7 +44,7 @@ class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
     }
 }
 
-data class DealtPlayer(val id: PlayerId, val name: PlayerName, val hand: Hand) {
+data class Player(val id: PlayerId, val name: PlayerName, val hand: Hand) {
 
     fun play(card: Card, currentTrick: Trick?, heartsHaveBeenPlayed: Boolean): Pair<PlayerId, Card> {
         gameRequires(card in hand) { "$name does not have $card in their hand" }

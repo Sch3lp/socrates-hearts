@@ -13,7 +13,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
 
     private val heartsHaveBeenPlayed: Boolean get() = gameEvents.filterIsInstance<CardPlayed>().firstOrNull { it.card.suit == Suit.HEARTS } != null
 
-    private val players: DealtPlayers get() = DealtPlayers.from(gameEvents)
+    private val players: Players get() = Players.from(gameEvents)
 
     private val playerThatLastPlayedACard: PlayerId get() =
         gameEvents.filterIsInstance<CardPlayed>().last().by
@@ -71,7 +71,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         passingRule.with(gameEvents).passCards(getPlayer(passedBy), cards)
     }
 
-    fun passCards(player: DealtPlayer, cards: Set<Card>) {
+    fun passCards(player: Player, cards: Set<Card>) {
         passingRule.with(gameEvents).passCards(player, cards)
     }
 }

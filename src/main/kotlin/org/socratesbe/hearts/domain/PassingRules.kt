@@ -11,19 +11,19 @@ sealed interface PassingRule {
 }
 
 abstract class InitiatedPassingRule(protected val gameEvents: GameEvents) {
-    abstract fun passCards(passedBy: DealtPlayer, cards: Set<Card>)
+    abstract fun passCards(passedBy: Player, cards: Set<Card>)
 }
 
 data object NoPassing : PassingRule
 class InitiatedNoPassingRule(gameEvents: GameEvents) : InitiatedPassingRule(gameEvents) {
-    override fun passCards(passedBy: DealtPlayer, cards: Set<Card>) {
+    override fun passCards(passedBy: Player, cards: Set<Card>) {
         gameEvents.publish(AllPlayersPassedCards)
     }
 }
 
 data object AlwaysPassLeft : PassingRule
 class InitiatedAlwaysPassLeft(gameEvents: GameEvents) : InitiatedPassingRule(gameEvents) {
-    override fun passCards(passedBy: DealtPlayer, cards: Set<Card>) {
+    override fun passCards(passedBy: Player, cards: Set<Card>) {
         val playerHasAlreadyPassed = gameEvents.filterIsInstance<PlayerPassedCards>().any { it.by == passedBy.id }
         gameRequires(!playerHasAlreadyPassed) {"${passedBy.name} already passed cards during this deal"}
         validateOrError(passedBy, cards)
@@ -32,7 +32,7 @@ class InitiatedAlwaysPassLeft(gameEvents: GameEvents) : InitiatedPassingRule(gam
         if (gameEvents.filterIsInstance<PlayerPassedCards>().size == 4) gameEvents.publish(AllPlayersPassedCards)
     }
 
-    private fun validateOrError(player: DealtPlayer, cards: Set<Card>) {
+    private fun validateOrError(player: Player, cards: Set<Card>) {
         val cardsNotInHand: Set<Card> = cards - player.hand.toList().toSet()
         gameRequires(cardsNotInHand.isEmpty()) {
             cardsNotInHand.joinToString(
@@ -46,7 +46,7 @@ class InitiatedAlwaysPassLeft(gameEvents: GameEvents) : InitiatedPassingRule(gam
 
 data object FourWayPassing : PassingRule
 class InitiatedFourWayPassing(gameEvents: GameEvents) : InitiatedPassingRule(gameEvents) {
-    override fun passCards(passedBy: DealtPlayer, cards: Set<Card>) {
+    override fun passCards(passedBy: Player, cards: Set<Card>) {
         TODO("Not yet implemented")
     }
 }
