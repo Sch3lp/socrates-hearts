@@ -34,8 +34,10 @@ class Players private constructor(private val players: List<Player>) {
             val dealtHand = gameEvents.forPlayerOrEmpty<PlayerWasDealtHand>(PlayerWasDealtHand::hand) { it.playerId == playerId }
             return Hand(dealtHand).apply {
                 pass(gameEvents.forPlayerOrEmpty<PlayerPassedCards>(PlayerPassedCards::cards) { it.by == playerId })
-                receive(gameEvents.forPlayerOrEmpty<PlayerPassedCards>(PlayerPassedCards::cards) { it.to == playerId })
-                play(gameEvents.filterIsInstance<CardPlayed>().filter { cardPlayed -> cardPlayed.by == playerId }.map { it.card }.toSet())
+                if (gameEvents.filterIsInstance<AllPlayersPassedCards>().isNotEmpty()) {
+                    receive(gameEvents.forPlayerOrEmpty<PlayerPassedCards>(PlayerPassedCards::cards) { it.to == playerId })
+                    play(gameEvents.filterIsInstance<CardPlayed>().filter { cardPlayed -> cardPlayed.by == playerId }.map { it.card }.toSet())
+                }
             }
         }
 

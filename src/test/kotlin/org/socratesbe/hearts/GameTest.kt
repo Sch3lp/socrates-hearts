@@ -379,7 +379,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPassCards("Bob already passed cards during this deal"))
     }
 
-    @Disabled
     @Test
     fun `cards are not received until everyone has passed cards`() {
         joinGame("Mary")
