@@ -68,10 +68,11 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
     }
 
     fun passCards(passedBy: PlayerName, cards: Set<Card>) {
+        gameRequires(isStarted) { "Now is not the time to be passing cards" }
         passingRule.with(gameEvents).passCards(getPlayer(passedBy), cards)
     }
 
-    fun passCards(player: Player, cards: Set<Card>) {
+    private fun passCards(player: Player, cards: Set<Card>) {
         passingRule.with(gameEvents).passCards(player, cards)
     }
 }

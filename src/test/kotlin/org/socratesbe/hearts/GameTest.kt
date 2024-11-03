@@ -400,7 +400,6 @@ class GameTest {
             .contains(EIGHT of SPADES, THREE of DIAMONDS, SIX of HEARTS)
     }
 
-    @Disabled
     @Test
     fun `cannot pass cards when passing hasn't begun yet`() {
         joinGame("Mary")
