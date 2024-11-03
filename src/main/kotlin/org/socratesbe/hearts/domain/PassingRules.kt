@@ -2,27 +2,26 @@ package org.socratesbe.hearts.domain
 
 import org.socratesbe.hearts.vocabulary.Card
 
-interface PassingRule {
-    fun with(gameEvents: GameEvents): InitiatedPassingRule
+sealed interface PassingRule {
+    fun with(gameEvents: GameEvents): InitiatedPassingRule = when(this) {
+        NoPassing -> InitiatedNoPassingRule(gameEvents)
+        AlwaysPassLeft -> InitiatedAlwaysPassLeft(gameEvents)
+        FourWayPassing -> InitiatedFourWayPassing(gameEvents)
+    }
 }
 
 abstract class InitiatedPassingRule(protected val gameEvents: GameEvents) {
     abstract fun passCards(passedBy: DealtPlayer, cards: Set<Card>)
 }
 
-object NoPassing : PassingRule {
-    override fun with(gameEvents: GameEvents): InitiatedPassingRule = InitiatedNoPassingRule(gameEvents)
-}
+data object NoPassing : PassingRule
 class InitiatedNoPassingRule(gameEvents: GameEvents) : InitiatedPassingRule(gameEvents) {
     override fun passCards(passedBy: DealtPlayer, cards: Set<Card>) {
-        //noop
+        gameEvents.publish(AllPlayersPassedCards)
     }
 }
 
-object AlwaysPassLeft : PassingRule {
-    override fun with(gameEvents: GameEvents) = InitiatedAlwaysPassLeft(gameEvents)
-}
-
+data object AlwaysPassLeft : PassingRule
 class InitiatedAlwaysPassLeft(gameEvents: GameEvents) : InitiatedPassingRule(gameEvents) {
     override fun passCards(passedBy: DealtPlayer, cards: Set<Card>) {
         val playerHasAlreadyPassed = gameEvents.filterIsInstance<PlayerPassedCards>().any { it.by == passedBy.id }
@@ -45,9 +44,7 @@ class InitiatedAlwaysPassLeft(gameEvents: GameEvents) : InitiatedPassingRule(gam
     }
 }
 
-object FourWayPassing : PassingRule {
-    override fun with(gameEvents: GameEvents) = InitiatedFourWayPassing(gameEvents)
-}
+data object FourWayPassing : PassingRule
 class InitiatedFourWayPassing(gameEvents: GameEvents) : InitiatedPassingRule(gameEvents) {
     override fun passCards(passedBy: DealtPlayer, cards: Set<Card>) {
         TODO("Not yet implemented")

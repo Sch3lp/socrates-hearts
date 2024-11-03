@@ -58,10 +58,10 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         gameRequires(players.size == 4) { "Not enough players joined" }
         gameRequires(!isStarted) { "Game was started already" }
         gameEvents.publish(GameStarted(passingRule))
-        if (passingRule == NoPassing) gameEvents.publish(AllPlayersPassedCards)
         players.forEach { player ->
             gameEvents.publish(PlayerWasDealtHand(player.id, dealer(player.name)))
         }
+        if (passingRule == NoPassing) players.forEach{ passCards(it.name, emptySet())}
     }
 
     fun peekIntoHandOf(player: PlayerName): List<Card> {
@@ -90,9 +90,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
     }
 }
 
-fun defaultDealerFn(deck: Deck): (PlayerName) -> List<Card> = { _ ->
-    List(13) { deck.draw() }
-}
+fun defaultDealerFn(deck: Deck): (PlayerName) -> List<Card> = { _ -> List(13) { deck.draw() } }
 
 class GameException(override val message: String) : RuntimeException(message)
 fun gameRequires(predicate: Boolean, message: () -> String) {
