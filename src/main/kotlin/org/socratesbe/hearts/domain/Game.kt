@@ -8,7 +8,8 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
     }
 
     val isStarted: Boolean get() = gameEvents.filterIsInstance<GameStarted>().isNotEmpty()
-    private val passingIsDone: Boolean get() = gameEvents.filterIsInstance<PlayersPassedCards>().isNotEmpty()
+
+    private val passingIsDone: Boolean get() = gameEvents.filterIsInstance<AllPlayersPassedCards>().isNotEmpty()
 
     private val heartsHaveBeenPlayed: Boolean get() = gameEvents.filterIsInstance<CardPlayed>().firstOrNull { it.card.suit == Suit.HEARTS } != null
 
@@ -40,8 +41,10 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
             .mapIndexed { idx, cards -> Trick(idx + 1, cards.associate { event -> event.card to event.by }) }
             .lastOrNull()
 
-    private val lastTrickWonBy get() : PlayerName? =
+    private val lastTrickWonBy: PlayerName? get() =
         currentTrick?.wasWonBy?.let { id -> dealtPlayers.getById(id) }?.name
+
+    private val passingRule: PassingRule get() = gameEvents.filterIsInstance<GameStarted>().firstOrNull()?.passingRule ?: gameError("Trying to access passing rule when game hasn't started yet is impossible")
 
     private fun getPlayer(playerName: PlayerName) = dealtPlayers.getByName(playerName)
 
@@ -55,7 +58,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         gameRequires(players.size == 4) { "Not enough players joined" }
         gameRequires(!isStarted) { "Game was started already" }
         gameEvents.publish(GameStarted(passingRule))
-        if (passingRule == NoPassing) gameEvents.publish(PlayersPassedCards)
+        if (passingRule == NoPassing) gameEvents.publish(AllPlayersPassedCards)
         players.forEach { player ->
             gameEvents.publish(PlayerWasDealtHand(player.id, dealer(player.name)))
         }
@@ -81,6 +84,14 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         val (playerId, playedCard) = player.play(card, currentTrick, heartsHaveBeenPlayed)
         gameEvents.publish(CardPlayed(by = playerId, card = playedCard))
     }
+
+    fun passCards(passedBy: PlayerName, cards: Set<Card>) {
+        val player = getPlayer(passedBy)
+        passingRule.validated(player, cards) {
+            gameEvents.publish(PlayerPassedCards(player.id, cards))
+        }
+//        gameEvents.publish(AllPlayersPassedCards)
+    }
 }
 
 fun defaultDealerFn(deck: Deck): (PlayerName) -> List<Card> = { _ ->
@@ -91,3 +102,4 @@ class GameException(override val message: String) : RuntimeException(message)
 fun gameRequires(predicate: Boolean, message: () -> String) {
     if (!predicate) throw GameException(message())
 }
+fun gameError(message: String): Nothing = throw GameException(message)

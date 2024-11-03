@@ -326,16 +326,13 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPlayCard("It's not time to play cards yet"))
     }
 
-    @Disabled
     @Test
     fun `player cannot pass cards they don't have`() {
-        setPassingRuleTo(AlwaysPassLeft)
-
         joinGame("Mary")
         joinGame("Joe")
         joinGame("Bob")
         joinGame("Jane")
-        startGame(DealMother::dealFixedCards)
+        startGame(DealMother::dealFixedCards, AlwaysPassLeft)
 
         val result = passCards("Bob", setOf(SIX of DIAMONDS, TWO of CLUBS, FIVE of SPADES))
 
@@ -345,13 +342,11 @@ class GameTest {
     @Disabled
     @Test
     fun `player cannot pass more than 3 cards`() {
-        setPassingRuleTo(AlwaysPassLeft)
-
         joinGame("Mary")
         joinGame("Joe")
         joinGame("Bob")
         joinGame("Jane")
-        startGame(DealMother::dealFixedCards)
+        startGame(DealMother::dealFixedCards, AlwaysPassLeft)
 
         val result = passCards("Bob", setOf(SIX of DIAMONDS, TWO of CLUBS, FIVE of CLUBS, QUEEN of DIAMONDS))
 
@@ -361,13 +356,11 @@ class GameTest {
     @Disabled
     @Test
     fun `player cannot pass less than 3 cards`() {
-        setPassingRuleTo(AlwaysPassLeft)
-
         joinGame("Mary")
         joinGame("Joe")
         joinGame("Bob")
         joinGame("Jane")
-        startGame(DealMother::dealFixedCards)
+        startGame(DealMother::dealFixedCards, AlwaysPassLeft)
 
         val result = passCards("Bob", setOf(SIX of DIAMONDS, TWO of CLUBS))
 
@@ -377,13 +370,11 @@ class GameTest {
     @Disabled
     @Test
     fun `player cannot pass twice during same deal`() {
-        setPassingRuleTo(AlwaysPassLeft)
-
         joinGame("Mary")
         joinGame("Joe")
         joinGame("Bob")
         joinGame("Jane")
-        startGame(DealMother::dealFixedCards)
+        startGame(DealMother::dealFixedCards, AlwaysPassLeft)
 
         passCards("Bob", setOf(SIX of DIAMONDS, TWO of CLUBS, FIVE of CLUBS))
         val result = passCards("Bob", setOf(SIX of DIAMONDS, TWO of CLUBS, QUEEN of DIAMONDS))
@@ -394,13 +385,11 @@ class GameTest {
     @Disabled
     @Test
     fun `cards are not received until everyone has passed cards`() {
-        setPassingRuleTo(AlwaysPassLeft)
-
         joinGame("Mary")
         joinGame("Joe")
         joinGame("Bob")
         joinGame("Jane")
-        startGame(DealMother::dealFixedCards)
+        startGame(DealMother::dealFixedCards, AlwaysPassLeft)
 
         passCards("Mary", setOf(EIGHT of SPADES, THREE of DIAMONDS, SIX of HEARTS))
         passCards("Joe", setOf(QUEEN of CLUBS, TWO of HEARTS, EIGHT of HEARTS))
@@ -446,14 +435,13 @@ class GameTest {
     @Disabled
     @Test
     fun `cards are passed to the right on second deal when four-way passing is enabled`() {
-        setPassingRuleTo(FourWayPassing)
         val cardPlaysInFirstDeal = readCardPlaysFromResource("/fixed_card_plays_four_way_passing.txt")
 
         joinGame("Mary")
         joinGame("Joe")
         joinGame("Bob")
         joinGame("Jane")
-        startGame(DealMother::dealFixedCards)
+        startGame(DealMother::dealFixedCards, FourWayPassing)
         passCards("Mary", setOf(EIGHT of SPADES, THREE of DIAMONDS, SIX of HEARTS))
         passCards("Joe", setOf(QUEEN of CLUBS, TWO of HEARTS, EIGHT of HEARTS))
         passCards("Bob", setOf(SIX of DIAMONDS, TWO of CLUBS, FIVE of CLUBS))
@@ -509,12 +497,6 @@ class GameTest {
         playCards(cardPlays)
         assertThat(scoreOfPlayer("Jane")).isEqualTo(108)
         assertThat(hasGameEnded()).isTrue()
-    }
-
-    private fun setPassingRuleTo(rule: PassingRule) {
-        // hint: for now, ignore this method by commenting out the line below
-        // this method will become relevant when you encounter the first test where players have to pass cards
-//        TODO()
     }
 
     private fun playCards(cardPlays: Iterator<PlayCard>) {

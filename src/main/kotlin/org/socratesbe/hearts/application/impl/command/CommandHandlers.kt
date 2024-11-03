@@ -42,7 +42,12 @@ internal class PlayCardHandler(private val game: Game) : CommandHandler<PlayCard
 }
 
 internal class PassCardsHandler(private val game: Game) : CommandHandler<PassCardsResponse, PassCards> {
-    override fun execute(command: PassCards): PassCardsResponse {
-        TODO()
-    }
+    override fun execute(command: PassCards): PassCardsResponse =
+        try {
+            game.passCards(command.passedBy, command.cards)
+            PassedCards
+        } catch(e: GameException) {
+            CouldNotPassCards(e.message)
+        }
+
 }

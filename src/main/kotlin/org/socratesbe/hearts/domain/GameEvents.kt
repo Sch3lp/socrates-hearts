@@ -11,7 +11,8 @@ data class GameStarted(val passingRule: PassingRule) : GameEvent
 data class PlayerJoined(val playerName: PlayerName) : GameEvent
 data class PlayerWasDealtHand(val playerId: PlayerId, val hand: List<Card>) : GameEvent
 data class CardPlayed(val by: PlayerId, val card: Card) : GameEvent
-data object PlayersPassedCards : GameEvent
+data object AllPlayersPassedCards : GameEvent
+data class PlayerPassedCards(val by: PlayerId, val cards: Set<Card>) : GameEvent
 
 
 data class Hand(private val cards: ArrayDeque<Card>) {
