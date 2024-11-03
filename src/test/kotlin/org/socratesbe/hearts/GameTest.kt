@@ -365,7 +365,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPassCards("Bob needs to pass exactly three cards"))
     }
 
-    @Disabled
     @Test
     fun `player cannot pass twice during same deal`() {
         joinGame("Mary")
