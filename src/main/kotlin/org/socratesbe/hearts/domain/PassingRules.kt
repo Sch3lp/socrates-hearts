@@ -24,6 +24,7 @@ object AlwaysPassLeft : PassingRule {
                 separator = ", nor "
             ) { it.toString() }
         }
+        gameRequires(cards.size == 3) { "${player.name} needs to pass exactly three cards" }
     }
 }
 

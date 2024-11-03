@@ -339,7 +339,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPassCards("Bob does not have 5♠️"))
     }
 
-    @Disabled
     @Test
     fun `player cannot pass more than 3 cards`() {
         joinGame("Mary")
@@ -353,7 +352,6 @@ class GameTest {
         assertThat(result).isEqualTo(CouldNotPassCards("Bob needs to pass exactly three cards"))
     }
 
-    @Disabled
     @Test
     fun `player cannot pass less than 3 cards`() {
         joinGame("Mary")
