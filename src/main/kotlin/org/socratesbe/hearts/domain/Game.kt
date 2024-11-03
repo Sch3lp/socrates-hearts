@@ -86,13 +86,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
     }
 
     fun passCards(passedBy: PlayerName, cards: Set<Card>) {
-        val player = getPlayer(passedBy)
-        val playerHasAlreadyPassed = gameEvents.filterIsInstance<PlayerPassedCards>().any { it.by == player.id }
-        gameRequires(!playerHasAlreadyPassed) {"$passedBy already passed cards during this deal"}
-        passingRule.validated(player, cards) {
-            gameEvents.publish(PlayerPassedCards(player.id, cards))
-        }
-//        gameEvents.publish(AllPlayersPassedCards)
+        passingRule.with(gameEvents).passCards(getPlayer(passedBy), cards)
     }
 }
 
