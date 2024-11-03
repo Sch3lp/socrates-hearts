@@ -17,26 +17,23 @@ class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
         fun from(gameEvents: GameEvents): DealtPlayers {
             val players: List<Player> = gameEvents.filterIsInstance<PlayerJoined>().mapIndexed { idx, it -> Player(PlayerId.entries[idx], it.playerName) }
             val dealtPlayers = players.map { player ->
-                val currentHand = currentHand(gameEvents, player)
+                val currentHand = currentHand(gameEvents, player.id)
                 DealtPlayer(player, currentHand)
             }
             return DealtPlayers(dealtPlayers)
         }
 
-        private inline fun <reified E: GameEvent> GameEvents.forPlayerOrEmpty(cardSelector: E.() -> Collection<Card>, playerSelector: (E) -> Boolean): Set<Card> {
-            return filterIsInstance<E>().firstOrNull { playerSelector(it) }?.cardSelector()?.toSet() ?: emptySet()
+        private fun currentHand(gameEvents: GameEvents, playerId: PlayerId): Hand {
+            val dealtHand = gameEvents.forPlayerOrEmpty<PlayerWasDealtHand>(PlayerWasDealtHand::hand) { it.playerId == playerId }
+            return Hand(dealtHand).apply {
+                pass(gameEvents.forPlayerOrEmpty<PlayerPassedCards>(PlayerPassedCards::cards) { it.by == playerId })
+                receive(gameEvents.forPlayerOrEmpty<PlayerPassedCards>(PlayerPassedCards::cards) { it.to == playerId })
+                play(gameEvents.filterIsInstance<CardPlayed>().filter { cardPlayed -> cardPlayed.by == playerId }.map { it.card }.toSet())
+            }
         }
 
-        private fun currentHand(gameEvents: GameEvents, player: Player): Hand {
-            val dealtHand = gameEvents.forPlayerOrEmpty<PlayerWasDealtHand>(PlayerWasDealtHand::hand) { it.playerId == player.id }
-            val hand = Hand(dealtHand)
-            with(hand) {
-                pass(gameEvents.forPlayerOrEmpty<PlayerPassedCards>(PlayerPassedCards::cards) { it.by == player.id })
-                receive(gameEvents.forPlayerOrEmpty<PlayerPassedCards>(PlayerPassedCards::cards) { it.to == player.id })
-                play(gameEvents.filterIsInstance<CardPlayed>().filter { cardPlayed -> cardPlayed.by == player.id }.map { it.card }.toSet())
-            }
-            return hand
-        }
+        private inline fun <reified E: GameEvent> GameEvents.forPlayerOrEmpty(cardSelector: E.() -> Collection<Card>, playerSelector: (E) -> Boolean): Set<Card> =
+            filterIsInstance<E>().firstOrNull { playerSelector(it) }?.cardSelector()?.toSet() ?: emptySet()
     }
 }
 
