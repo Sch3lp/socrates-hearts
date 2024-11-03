@@ -2,7 +2,6 @@ package org.socratesbe.hearts.domain
 
 import org.socratesbe.hearts.vocabulary.Card
 import org.socratesbe.hearts.vocabulary.PlayerName
-import org.socratesbe.hearts.vocabulary.Suit
 import kotlin.reflect.KClass
 
 sealed interface GameEvent
@@ -14,15 +13,6 @@ data class CardPlayed(val by: PlayerId, val card: Card) : GameEvent
 data object AllPlayersPassedCards : GameEvent
 data class PlayerPassedCards(val by: PlayerId, val cards: Set<Card>, val to: PlayerId) : GameEvent
 
-
-data class Hand(private val cards: ArrayDeque<Card>) {
-    operator fun contains(card: Card) = card in cards
-    operator fun contains(suit: Suit) = suit in cards.map { it.suit }
-
-    fun remove(card: Card) = cards.remove(card)
-    fun toList(): List<Card> = cards.toList()
-    fun allAre(suit: Suit) = cards.all { card -> card.suit == suit }
-}
 
 fun interface GameEventListener<GameEvent> {
     fun on(event: GameEvent)
