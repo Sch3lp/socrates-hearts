@@ -18,20 +18,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
             gameEvents.filterIsInstance<PlayerJoined>()
                 .mapIndexed { idx, it -> Player(PlayerId.entries[idx], it.playerName) }
 
-    private val dealtPlayers: DealtPlayers
-        get() = DealtPlayers(players.map { player ->
-            gameEvents.filterIsInstance<PlayerWasDealtHand>()
-                .first { it.playerId == player.id }
-                .let {
-                    val hand = gameEvents.filterIsInstance<CardPlayed>()
-                        .filter { cardPlayed -> cardPlayed.by == player.id }
-                        .fold(Hand(ArrayDeque(it.hand))) { acc, cardPlayed ->
-                            acc.remove(cardPlayed.card)
-                            acc
-                        }
-                    DealtPlayer(player, hand)
-                }
-        })
+    private val dealtPlayers: DealtPlayers get() = DealtPlayers.from(gameEvents)
 
     private val playerThatLastPlayedACard: PlayerId get() =
         gameEvents.filterIsInstance<CardPlayed>().last().by

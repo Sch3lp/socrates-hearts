@@ -2,7 +2,7 @@ package org.socratesbe.hearts.domain
 
 import org.socratesbe.hearts.vocabulary.*
 
-class DealtPlayers(private val players: List<DealtPlayer>) {
+class DealtPlayers private constructor(private val players: List<DealtPlayer>) {
 
     fun getByName(playerName: PlayerName): DealtPlayer =
         players.firstOrNull { it.name == playerName }
@@ -12,6 +12,26 @@ class DealtPlayers(private val players: List<DealtPlayer>) {
 
     fun playerWithStartCard() =
         players.firstOrNull { Symbol.TWO of Suit.CLUBS in it.hand }
+
+    companion object {
+        fun from(gameEvents: GameEvents): DealtPlayers {
+            val players: List<Player> = gameEvents.filterIsInstance<PlayerJoined>().mapIndexed { idx, it -> Player(PlayerId.entries[idx], it.playerName) }
+            val dealtPlayers = players.map { player ->
+                val currentHand = currentHand(gameEvents, player)
+                DealtPlayer(player, currentHand)
+            }
+            return DealtPlayers(dealtPlayers)
+        }
+
+        private fun currentHand(gameEvents: GameEvents, player: Player): Hand {
+            val dealtHand = gameEvents.filterIsInstance<PlayerWasDealtHand>().firstOrNull { it.playerId == player.id }?.hand ?: emptySet()
+            val passedCards = gameEvents.filterIsInstance<PlayerPassedCards>().firstOrNull { it.by == player.id }?.cards ?: emptySet()
+            val receivedCards = gameEvents.filterIsInstance<PlayerPassedCards>().firstOrNull { it.to == player.id }?.cards ?: emptySet()
+            val cardsPlayed = gameEvents.filterIsInstance<CardPlayed>().filter { cardPlayed -> cardPlayed.by == player.id }.map { it.card }
+            val currentHand = dealtHand - passedCards + receivedCards - cardsPlayed.toSet()
+            return Hand(ArrayDeque(currentHand))
+        }
+    }
 }
 
 data class DealtPlayer(val player: Player, val hand: Hand) {
@@ -56,10 +76,10 @@ enum class PlayerId {
 
     val playerToTheLeft: PlayerId
         get() =
-        when(this) {
-            One -> Two
-            Two -> Three
-            Three -> Four
-            Four -> One
-        }
+            when (this) {
+                One -> Two
+                Two -> Three
+                Three -> Four
+                Four -> One
+            }
 }
