@@ -4,13 +4,25 @@ import org.socratesbe.hearts.vocabulary.Card
 import org.socratesbe.hearts.vocabulary.PlayerName
 import kotlin.reflect.KClass
 
+@JvmInline value class DealId(private val value: Int) {
+    fun next() = DealId(value + 1)
+    companion object {
+        val First = DealId(1)
+    }
+}
+
 sealed interface GameEvent
 data object GameCreated : GameEvent
-data class GameStarted(val passingRule: PassingRule) : GameEvent
 data class PlayerJoined(val playerName: PlayerName) : GameEvent
-data class PlayerWasDealtHand(val playerId: PlayerId, val hand: List<Card>) : GameEvent
-data class CardPlayed(val by: PlayerId, val card: Card) : GameEvent
-data object AllPlayersPassedCards : GameEvent
+data class GameStarted(val passingRule: PassingRule) : GameEvent
+
+sealed interface DealEvent : GameEvent {
+    val dealId: DealId
+}
+data class DealStarted(override val dealId: DealId) : DealEvent
+data class PlayerWasDealtHand(override val dealId: DealId, val playerId: PlayerId, val hand: List<Card>) : DealEvent
+data class CardPlayed(override val dealId: DealId, val by: PlayerId, val card: Card) : DealEvent
+data class AllPlayersPassedCards(override val dealId: DealId) : DealEvent
 data class PlayerPassedCards(val by: PlayerId, val cards: Set<Card>, val to: PlayerId) : GameEvent
 
 
@@ -24,6 +36,10 @@ class GameEvents private constructor(
     private val listeners: MutableList<Pair<KClass<out GameEvent>, GameEventListener<out GameEvent>>> = mutableListOf()
 
     val events: List<GameEvent> = _events
+
+    val currentDealId: DealId get() = _events.filterIsInstance<DealStarted>().lastOrNull()?.dealId ?: gameError("Cannot fetch current deal, probably because the game hasn't started yet")
+
+    val currentDealEvents: List<GameEvent> get() = _events.filter { (it as? DealEvent)?.dealId == currentDealId }
 
     fun publish(gameEvent: GameEvent) {
         _events.add(gameEvent)

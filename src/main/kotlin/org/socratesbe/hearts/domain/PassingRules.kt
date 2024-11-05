@@ -17,7 +17,7 @@ abstract class InitiatedPassingRule(protected val gameEvents: GameEvents) {
 data object NoPassing : PassingRule
 class InitiatedNoPassingRule(gameEvents: GameEvents) : InitiatedPassingRule(gameEvents) {
     override fun passCards(passedBy: Player, cards: Set<Card>) {
-        gameEvents.publish(AllPlayersPassedCards)
+        gameEvents.publish(AllPlayersPassedCards(gameEvents.currentDealId))
     }
 }
 
@@ -29,7 +29,7 @@ class InitiatedAlwaysPassLeft(gameEvents: GameEvents) : InitiatedPassingRule(gam
         validateOrError(passedBy, cards)
         gameEvents.publish(PlayerPassedCards(by = passedBy.id, cards = cards, to = passedBy.id.playerToTheLeft))
 
-        if (gameEvents.filterIsInstance<PlayerPassedCards>().size == 4) gameEvents.publish(AllPlayersPassedCards)
+        if (gameEvents.filterIsInstance<PlayerPassedCards>().size == 4) gameEvents.publish(AllPlayersPassedCards(gameEvents.currentDealId))
     }
 
     private fun validateOrError(player: Player, cards: Set<Card>) {

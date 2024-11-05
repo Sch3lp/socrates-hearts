@@ -40,8 +40,10 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         gameRequires(players.size == 4) { "Not enough players joined" }
         gameRequires(!isStarted) { "Game was started already" }
         gameEvents.publish(GameStarted(passingRule))
+        val dealId = DealId.First
+        gameEvents.publish(DealStarted(dealId))
         players.forEach { player ->
-            gameEvents.publish(PlayerWasDealtHand(player.id, dealer(player.name)))
+            gameEvents.publish(PlayerWasDealtHand(dealId, player.id, dealer(player.name),))
         }
         if (passingRule == NoPassing) players.forEach { passCards(it, emptySet())}
     }
@@ -64,7 +66,7 @@ class Game(private val gameEvents: GameEvents = GameEvents()) {
         gameRequires(playedBy == whoseTurnIsIt()) { "It's not ${playedBy}'s turn to play" }
         val player = getPlayer(playedBy)
         val (playerId, playedCard) = player.play(card, currentTrick, heartsHaveBeenPlayed)
-        gameEvents.publish(CardPlayed(by = playerId, card = playedCard))
+        gameEvents.publish(CardPlayed(dealId = gameEvents.currentDealId, by = playerId, card = playedCard))
     }
 
     fun passCards(passedBy: PlayerName, cards: Set<Card>) {
